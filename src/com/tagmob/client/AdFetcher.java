@@ -1,6 +1,7 @@
 package com.tagmob.client;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -18,6 +19,10 @@ public class AdFetcher {
     public static final String SIZE = "size:";
 
     public static final String IMAGE_SRC = "src:";
+    
+    public static final String CAMPAIGN_ID = "campaignId:";
+    
+    public static final String CPC = "cpc:";
 
     private static final URL TAG_MOB_REQUEST_URL;
 
@@ -26,7 +31,6 @@ public class AdFetcher {
         try {
             url = new URL(TagMobURLs.TAG_MOB_REQUEST_URL);
         } catch (MalformedURLException ignore) {
-            // should never get here
             throw new AssertionError("Malformed TagMob request URL");
         }
         TAG_MOB_REQUEST_URL = url;
@@ -52,6 +56,7 @@ public class AdFetcher {
                 if (headerValue == null || (headerValue = headerValue.trim()).isEmpty()) {
                     continue;
                 }
+                
                 headers.add(Header.create(headerName, headerValue));
             }
         }
@@ -99,14 +104,16 @@ public class AdFetcher {
         String imageSrc = null;
         String key = null;
         String text = null;
-        
+        int campaignId = -1;
+        BigDecimal cpc = null;
+                
         for (String line : lines) {
             if (line.isEmpty()) {
                 if (AdType.IMAGE.toString().equals(adType)) {
-                    adResponses.add(new AdResponse(key, AdType.IMAGE, null, size, imageSrc));
+                    adResponses.add(new AdResponse(key, AdType.IMAGE, null, size, imageSrc, campaignId, cpc));
                 }
                 else if (AdType.TEXT.toString().equals(adType)) {
-                    adResponses.add(new AdResponse(key, AdType.TEXT, text, null, null));
+                    adResponses.add(new AdResponse(key, AdType.TEXT, text, null, null, campaignId, cpc));
                 }
                 
                 adType = null;
@@ -114,6 +121,8 @@ public class AdFetcher {
                 imageSrc = null;
                 key = null;
                 text = null;
+                campaignId = -1;
+                cpc = null;
                 
                 continue;
             }
@@ -126,23 +135,38 @@ public class AdFetcher {
             String k = line.substring(0, index + 1).trim();
             String v = line.substring(index + 1);
             
-            if (k.equals(TYPE)) {
+            if (TYPE.equals(k)) {
                 adType = v;
             }
-            else if (k.equals(SIZE)) {
+            else if (SIZE.equals(k)) {
                 size = ImageSize.from(v);
             }
-            else if (k.equals(IMAGE_SRC)) {
+            else if (IMAGE_SRC.equals(k)) {
                 imageSrc = v;
             }
-            else if (k.equals(KEY)) {
+            else if (KEY.equals(k)) {
                 key = v;
             }
-            else if (k.equals(TEXT)) {
+            else if (TEXT.equals(k)) {
                 text = v;
+            }
+            else if (CAMPAIGN_ID.equals(k)) {
+                campaignId = Integer.parseInt(v.trim());
+            }
+            else if (CPC.equals(k)) {
+                cpc = new BigDecimal(v.trim());
             }
         }
         
+        if (adType != null) {
+            if (AdType.IMAGE.toString().equals(adType)) {
+                adResponses.add(new AdResponse(key, AdType.IMAGE, null, size, imageSrc, campaignId, cpc));
+            }
+            else if (AdType.TEXT.toString().equals(adType)) {
+                adResponses.add(new AdResponse(key, AdType.TEXT, text, null, null, campaignId, cpc));
+            }
+        }
+                
         return adResponses;
     }
 }

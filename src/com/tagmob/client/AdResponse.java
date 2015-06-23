@@ -1,6 +1,7 @@
 package com.tagmob.client;
 
 import static com.tagmob.client.Util.requireNonNull;
+import java.math.BigDecimal;
 
 
 public class AdResponse {
@@ -14,8 +15,12 @@ public class AdResponse {
     private final ImageSize imgSize;
     
     private final String imgSrc;
+    
+    private final Integer campaignId;
+    
+    private final BigDecimal cpc;
 
-    AdResponse(String key, AdType type, String text, ImageSize imgSize, String imgSrc) {
+    AdResponse(String key, AdType type, String text, ImageSize imgSize, String imgSrc, int campaignId, BigDecimal cpc) {
         this.type = requireNonNull(type, "type must not be null");
         this.text = type.equals(AdType.TEXT)
                 ? requireNonNull(text, "text must not be null for text ads")
@@ -23,6 +28,8 @@ public class AdResponse {
         this.key = key;
         this.imgSize = imgSize;
         this.imgSrc = imgSrc;
+        this.campaignId = campaignId;
+        this.cpc = cpc;
     }
 
     public AdType type() {
@@ -48,6 +55,21 @@ public class AdResponse {
         return imgSize;
     }
 
+    /**
+     * @return the imgSrc
+     */
+    public String getImgSrc() {
+        return imgSrc;
+    }
+    
+    public Integer campaignId() {
+        return campaignId;
+    }
+    
+    public BigDecimal cpc() {
+        return cpc;
+    }
+
     @Override
     public String toString() {
         return "type:" + type + "\n" +
@@ -55,12 +77,5 @@ public class AdResponse {
                 "key:" + key + "\n" +
                 "imgSize:" + imgSize == null ? null : imgSize.toString() + "\n" +
                 "src" + imgSrc;
-    }
-
-    /**
-     * @return the imgSrc
-     */
-    public String getImgSrc() {
-        return imgSrc;
     }
 }
